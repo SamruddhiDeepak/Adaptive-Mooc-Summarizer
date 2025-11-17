@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOOC Learning Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      text-align: center;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      padding: 4rem 3rem;
+      width: 90%;
+      max-width: 500px;
+      transition: all 0.3s ease;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      color: #dcdcdc;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+    .btn {
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      border: none;
+      color: white;
+      padding: 1rem 2.5rem;
+      margin: 0.8rem 0;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      width: 80%;
+    }
+    .btn:hover {
+      background: linear-gradient(90deg, #0072ff, #00c6ff);
+      transform: scale(1.05);
+    }
+    footer {
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #b5b5b5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MOOC Learning Assistant</h1>
+    <p>Choose your preferred learning tool below:</p>
+
+    <button class="btn" onclick="location.href='index.html'">Micromodule Summarizer</button>
+    <button class="btn" onclick="location.href='flashcard.html'">Flashcards Generator</button>
+    <button class="btn" onclick="location.href='quiz.html'">Quiz</button>
+
+    <footer>⚡ Smart Learning Made Simple</footer>
+  </div>
+</body>
+</html>

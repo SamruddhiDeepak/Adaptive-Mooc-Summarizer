@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adaptive MOOC MCQ Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      padding: 3rem 4rem;
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
+      transition: all 0.3s ease;
+    }
+    .container:hover { transform: scale(1.02); }
+    h1 { font-size: 1.9rem; margin-bottom: 1rem; color: #fff; }
+    p { color: #dcdcdc; margin-bottom: 2rem; font-size: 0.95rem; }
+
+    .upload-box {
+      border: 2px dashed #9fd3c7;
+      border-radius: 15px;
+      padding: 2rem;
+      background-color: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .upload-box:hover { background-color: rgba(255,255,255,0.15); border-color: #00e0ff; }
+    input[type="file"] { display: none; }
+    label { font-size: 1rem; color: #e6f7ff; cursor: pointer; font-weight: 500; }
+    #fileInfo { margin-top: 1rem; font-size: 0.9rem; color: #b5e2fa; }
+
+    .btn {
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      border: none;
+      color: white;
+      padding: 0.8rem 2rem;
+      margin-top: 2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    .btn:hover { background: linear-gradient(90deg, #0072ff, #00c6ff); transform: scale(1.05); }
+
+    .quiz-box { margin-top: 2rem; display: none; text-align: left; }
+    .question { margin-bottom: 1.2rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 10px; }
+    .options button {
+      display: block;
+      width: 100%;
+      margin: 0.4rem 0;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .options button:hover { background: rgba(0,224,255,0.3); }
+    .loader { display: none; margin-top: 2rem; flex-direction: column; align-items: center; }
+    .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #00e0ff; border-radius: 50%; width: 45px; height: 45px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loader-text { margin-top: 1rem; font-size: 0.95rem; color: #cbefff; }
+    footer { margin-top: 2rem; font-size: 0.8rem; color: #b5b5b5; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Adaptive MOOC MCQ Quiz</h1>
+    <p>Upload your lecture PDF below to generate a 10-question MCQ quiz.</p>
+
+    <div class="upload-box" id="uploadBox">
+      <label for="pdfUpload">📄 Click to Upload Lecture PDF</label>
+      <input type="file" id="pdfUpload" accept=".pdf" />
+      <div id="fileInfo"></div>
+    </div>
+
+    <button class="btn" id="generateBtn" onclick="handleUpload()">Generate Quiz</button>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <div class="loader-text">Generating quiz… Please wait</div>
+    </div>
+
+    <!-- Quiz Output -->
+    <div class="quiz-box" id="quizBox">
+      <div id="questionText" class="question"></div>
+      <div class="options" id="optionsContainer"></div>
+      <button class="btn" id="nextBtn" onclick="nextQuestion()" style="display:none;">Next Question</button>
+    </div>
+
+    <footer>⚡ Smart Learning Made Simple</footer>
+  </div>
+
+  <script>
+    const uploadBox = document.getElementById('uploadBox');
+    const pdfInput = document.getElementById('pdfUpload');
+    const fileInfo = document.getElementById('fileInfo');
+    const generateBtn = document.getElementById('generateBtn');
+    const loader = document.getElementById('loader');
+    const quizBox = document.getElementById('quizBox');
+    const questionText = document.getElementById('questionText');
+    const optionsContainer = document.getElementById('optionsContainer');
+    const nextBtn = document.getElementById('nextBtn');
+
+    let quiz = [];
+    let currentIndex = 0;
+    let score = 0;
+
+    uploadBox.addEventListener('click', () => pdfInput.click());
+    pdfInput.addEventListener('change', () => {
+      const file = pdfInput.files[0];
+      if (file) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        fileInfo.textContent = `✅ Uploaded: ${file.name} (${sizeMB} MB)`;
+      }
+    });
+
+    async function handleUpload() {
+      const file = pdfInput.files[0];
+      if (!file) { alert('Please upload a lecture PDF!'); return; }
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('count', 10);
+
+      loader.style.display = 'flex';
+      generateBtn.disabled = true;
+      generateBtn.style.opacity = "0.6";
+      quizBox.style.display = "none";
+
+      try {
+        const res = await fetch('http://127.0.0.1:5000/quiz', { method: 'POST', body: formData });
+        if (!res.ok) {
+          let err = await res.json();
+          alert("⚠ Error: " + err.error);
+          loader.style.display = 'none';
+          generateBtn.disabled = false;
+          generateBtn.style.opacity = "1";
+          return;
+        }
+
+        const data = await res.json();
+        quiz = data.quiz || [];
+        if (!quiz.length) {
+          alert("No quiz generated.");
+          loader.style.display = 'none';
+          generateBtn.disabled = false;
+          generateBtn.style.opacity = "1";
+          return;
+        }
+
+        currentIndex = 0;
+        score = 0;
+        loader.style.display = 'none';
+        generateBtn.style.display = 'none';
+        showQuestion();
+
+      } catch (err) {
+        alert("❌ Error connecting to backend.");
+        loader.style.display = 'none';
+        generateBtn.disabled = false;
+        generateBtn.style.opacity = "1";
+      }
+    }
+
+    function showQuestion() {
+      const q = quiz[currentIndex];
+      questionText.textContent = `Q${currentIndex+1}: ${q.question}`;
+      optionsContainer.innerHTML = '';
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.onclick = () => selectOption(opt);
+        optionsContainer.appendChild(btn);
+      });
+      nextBtn.style.display = 'none';
+      quizBox.style.display = 'block';
+    }
+
+    function selectOption(selected) {
+      const correct = quiz[currentIndex].answer;
+      if (selected === correct) score++;
+      Array.from(optionsContainer.children).forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === correct) btn.style.backgroundColor = 'green';
+        else if (btn.textContent === selected) btn.style.backgroundColor = 'red';
+      });
+      nextBtn.style.display = 'block';
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex >= quiz.length) {
+        quizBox.innerHTML = `<div class="question">🎉 Quiz Completed!<br>Your Score: ${score} / ${quiz.length}</div>
+                             <button class="btn" onclick="location.reload()">Restart Quiz</button>`;
+      } else {
+        showQuestion();
+      }
+    }
+  </script>
+</body>
+</html>
